@@ -175,7 +175,7 @@ describe("Debug EventTicketing", function () {
         "metadata", 
         "Test Location"
       )
-    ).to.be.revertedWith("eventTimestamp must be future");
+    ).to.be.revertedWithCustomError(sale, "InvalidTimestamp");
 
     // Test zero max supply
     await expect(
@@ -188,7 +188,7 @@ describe("Debug EventTicketing", function () {
         "metadata", 
         "Test Location"
       )
-    ).to.be.revertedWith("maxSupply must be > 0");
+    ).to.be.revertedWithCustomError(sale, "InvalidMaxSupply");
 
     // Test empty event name
     await expect(
@@ -201,7 +201,7 @@ describe("Debug EventTicketing", function () {
         "metadata", 
         "Test Location"
       )
-    ).to.be.revertedWith("eventName required");
+    ).to.be.revertedWithCustomError(sale, "InvalidName");
 
     // Test empty description
     await expect(
@@ -214,6 +214,6 @@ describe("Debug EventTicketing", function () {
         "metadata", 
         "Test Location"
       )
-    ).to.be.revertedWith("description required");
+    ).to.be.revertedWithCustomError(sale, "InvalidDescription");
   });
 });

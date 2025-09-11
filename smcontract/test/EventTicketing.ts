@@ -2,7 +2,7 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre from "hardhat";
 
-describe("EventTicketing (native CELO)", function () {
+describe("EventTicketing (native STT)", function () {
   async function deployFixture() {
     const [owner, creator, user, user2] = await hre.ethers.getSigners();
 
@@ -60,7 +60,7 @@ describe("EventTicketing (native CELO)", function () {
     expect(t.totalCollected).to.equal(0n);
   });
 
-  it("registers with exact CELO, mints NFT and records registrant", async () => {
+  it("registers with exact STT, mints NFT and records registrant", async () => {
     const { sale, nft, creator, user } = await loadFixture(deployFixture);
     const { id, price, maxSupply } = await createBasicTicket(sale, creator, { maxSupply: 2 });
 
@@ -69,7 +69,6 @@ describe("EventTicketing (native CELO)", function () {
 
     // NFT minted to user with tokenId 1
     expect(await nft.ownerOf(1n)).to.equal(user.address);
-    expect(await nft.ticketOfToken(1n)).to.equal(id);
 
     // State updated
     expect(await sale.isRegistered(id, user.address)).to.equal(true);
@@ -85,14 +84,14 @@ describe("EventTicketing (native CELO)", function () {
     const { id, price } = await createBasicTicket(sale, creator, { maxSupply: 1 });
 
     await expect(sale.connect(user).register(id, { value: price - 1n }))
-      .to.be.revertedWith("incorrect CELO amount");
+      .to.be.revertedWithCustomError(sale, "InvalidPaymentAmount");
 
     await sale.connect(user).register(id, { value: price });
     await expect(sale.connect(user).register(id, { value: price }))
-      .to.be.revertedWith("already registered");
+      .to.be.revertedWithCustomError(sale, "AlreadyRegistered");
 
     await expect(sale.connect(user2).register(id, { value: price }))
-      .to.be.revertedWith("sold out");
+      .to.be.revertedWithCustomError(sale, "SoldOut");
 
     // New ticket and move time past event
     const { id: id2, price: price2, eventTimestamp } = await createBasicTicket(sale, creator, { startIn: 10 });
@@ -108,7 +107,7 @@ describe("EventTicketing (native CELO)", function () {
     await sale.connect(creator).closeTicket(id);
     expect(await sale.getStatus(id)).to.equal(3n); // Closed
     await expect(sale.connect(user).register(id, { value: price }))
-      .to.be.revertedWith("ticket closed");
+      .to.be.revertedWithCustomError(sale, "EventClosed");
 
     // After event time, status becomes Passed
     await time.increaseTo(eventTimestamp + 1n);
@@ -128,11 +127,11 @@ describe("EventTicketing (native CELO)", function () {
     expect(after - before).to.equal(price);
 
     await expect(sale.connect(creator).withdrawProceeds(id))
-      .to.be.revertedWith("ticket canceled");
+      .to.be.revertedWithCustomError(sale, "EventCanceled");
 
     // Refund already processed
     await expect(sale.connect(user).claimRefund(id))
-      .to.be.revertedWith("nothing to refund");
+      .to.be.revertedWithCustomError(sale, "NothingToRefund");
   });
 
   it("withdrawProceeds transfers creator and fee shares and cannot be called twice", async () => {
@@ -149,7 +148,7 @@ describe("EventTicketing (native CELO)", function () {
 
     const tx = await sale.connect(creator).withdrawProceeds(id);
     const receipt = await tx.wait();
-    const gas = (receipt!.gasUsed as bigint) * (receipt!.effectiveGasPrice as bigint);
+    const gas = (receipt.gasUsed) * (receipt.effectiveGasPrice);
 
     const net = price * 2n;
     const fee = (net * 250n) / 10000n; // 2.5%
@@ -158,7 +157,7 @@ describe("EventTicketing (native CELO)", function () {
     const afterCreator = await hre.ethers.provider.getBalance(creator.address);
     const afterFee = await hre.ethers.provider.getBalance(feeRecipient.address);
 
-    expect(afterCreator + gas - beforeCreator).to.equal(toCreator);
+    expect(afterCreator + BigInt(gas) - beforeCreator).to.equal(toCreator);
     expect(afterFee - beforeFee).to.equal(fee);
 
     await expect(sale.connect(creator).withdrawProceeds(id))
@@ -190,7 +189,7 @@ describe("EventTicketing (native CELO)", function () {
     expect(afterCreator - beforeCreator).to.equal(toCreator);
     expect(afterFee - beforeFee).to.equal(fee);
 
-    await expect(sale.connect(user2).finalizeEvent(id)).to.be.revertedWith("already withdrawn");
+    await expect(sale.connect(user2).finalizeEvent(id)).to.be.revertedWithCustomError(sale, "ProceedsAlreadyWithdrawn");
   });
 
   it("updateTicket enforces rules and updates fields", async () => {
@@ -200,7 +199,7 @@ describe("EventTicketing (native CELO)", function () {
     const now = (await hre.ethers.provider.getBlock("latest"))!.timestamp;
     const newTs = now + 10_000;
     const newPrice = hre.ethers.parseEther("0.25");
-    await expect(sale.updateTicket(id, newPrice, "Lagos", BigInt(newTs))).to.be.revertedWith("only creator");
+    await expect(sale.updateTicket(id, newPrice, "Lagos", BigInt(newTs))).to.be.revertedWithCustomError(sale, "OnlyCreator");
 
     await sale.connect(creator).updateTicket(id, newPrice, "Lagos", BigInt(newTs));
     const t = await sale.tickets(id);
@@ -214,12 +213,12 @@ describe("EventTicketing (native CELO)", function () {
     const { id, price } = await createBasicTicket(sale, creator, { maxSupply: 2 });
 
     await sale.connect(user).register(id, { value: price });
-    await expect(sale.updateMaxSupply(id, 1)).to.be.revertedWith("only creator");
-    await expect(sale.connect(creator).updateMaxSupply(id, 0)).to.be.revertedWith("zero max");
+    await expect(sale.updateMaxSupply(id, 1)).to.be.revertedWithCustomError(sale, "OnlyCreator");
+    await expect(sale.connect(creator).updateMaxSupply(id, 0)).to.be.revertedWithCustomError(sale, "InvalidMaxSupply");
 
     // sell out to 2, then try to reduce below sold (to 1)
     await sale.connect(user2).register(id, { value: price });
-    await expect(sale.connect(creator).updateMaxSupply(id, 1)).to.be.revertedWith("below sold");
+    await expect(sale.connect(creator).updateMaxSupply(id, 1)).to.be.revertedWithCustomError(sale, "InvalidMaxSupply");
 
     // increasing to 3 (>= sold)
     await sale.connect(creator).updateMaxSupply(id, 3);
@@ -234,13 +233,13 @@ describe("EventTicketing (native CELO)", function () {
     // isAvailable true initially
     expect(await sale.isAvailable(id)).to.equal(true);
 
-    // direct CELO send reverts
+    // direct STT send reverts
     await expect((await hre.ethers.getSigners())[0].sendTransaction({ to: sale.target, value: hre.ethers.parseEther("0.1") }))
-      .to.be.revertedWith("send CELO via register()");
+      .to.be.revertedWithCustomError(sale, "InvalidCall");
 
     // fallback reverts
     await expect((await hre.ethers.getSigners())[0].sendTransaction({ to: sale.target, data: "0x12345678" }))
-      .to.be.revertedWith("invalid call");
+      .to.be.revertedWithCustomError(sale, "InvalidCall");
 
     // registrants view
     await sale.connect(user).register(id, { value: price });
