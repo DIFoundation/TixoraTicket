@@ -18,22 +18,22 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    celo_sepolia: {
-      url: "https://rpc.ankr.com/celo_sepolia",
+    somnia_testnet: {
+      url: "https://dream-rpc.somnia.network",
       accounts: [PRIVATE_KEY],
     },
   },
   etherscan: {
     apiKey: {
-      "celo-sepolia": API_KEY,
+      somnia_testnet: API_KEY,
     },
     customChains: [
       {
-        network: "celo-sepolia",
-        chainId: 11142220,
+        network: "somnia_testnet",
+        chainId: 50312,
         urls: {
-          apiURL: "https://celo-sepolia.blockscout.com/api",
-          browserURL: "https://celo-sepolia.blockscout.com"
+          apiURL: "https://shannon-explorer.somnia.network/api",
+          browserURL: "https://shannon-explorer.somnia.network",
         }
       }
     ],
