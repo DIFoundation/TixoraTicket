@@ -1,0 +1,95 @@
+import { Button } from '@/components/ui/button';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import Image from 'next/image';
+
+export const ConnectionButton = () => {
+  return (
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        mounted,
+      }) => {
+        // Note: If your app doesn't use authentication, you
+        // can remove all 'authenticationStatus' checks
+        const ready = mounted;
+        const connected =
+          ready &&
+          account &&
+          chain;
+        return (
+          <div
+            {...(!ready && {
+              'aria-hidden': true,
+              'style': {
+                opacity: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              },
+            })}
+          >
+            {(() => {
+              if (!connected) {
+                return (
+                  <Button onClick={openConnectModal} type="button" variant='secondary'>
+                    Connect Wallet
+                  </Button>
+                );
+              }
+              if (chain.unsupported) {
+                return (
+                  <Button onClick={openChainModal} type="button" variant='destructive'>
+                    Wrong network
+                  </Button>
+                );
+              }
+              return (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={openChainModal}
+                    className="flex items-center"
+                    type="button"
+                    variant='secondary'
+                  >
+                    {chain.hasIcon && (
+                      <div
+                        className="rounded-full overflow-hidden mr-2"
+                        style={{
+                          background: chain.iconBackground,
+                          width: 12,
+                          height: 12,
+                          borderRadius: 999,
+                          overflow: 'hidden',
+                          marginRight: 4,
+                        }}
+                      >
+                        {chain.iconUrl && (
+                          <Image
+                            alt={chain.name ?? 'Chain icon'}
+                            src={chain.iconUrl}
+                            width={12}
+                            height={12}
+                          />
+                        )}
+                      </div>
+                    )}
+                    {chain.name}
+                  </Button>
+                  <Button onClick={openAccountModal} type="button" variant='secondary'>
+                    {account.displayName}
+                    {account.displayBalance
+                      ? ` (${account.displayBalance})`
+                      : ' '}
+                  </Button>
+                </div>
+              );
+            })()}
+          </div>
+        );
+      }}
+    </ConnectButton.Custom>
+  );
+};
