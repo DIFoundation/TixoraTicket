@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
+import { MapPin, Users, Ticket, Loader2, Clock } from "lucide-react"
 import Image from "next/image"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
@@ -83,6 +83,7 @@ export function EventCard({ event }: EventCardProps) {
     }
 
     setPurchasing(true)
+    console.log('Starting purchase process for event:', event.id)
 
     try {
       // Check if user has enough balance
@@ -101,26 +102,50 @@ export function EventCard({ event }: EventCardProps) {
       }
 
       toast.info(`Purchasing ticket for "${event.eventTitle}", click Confirm in your wallet to approve the transaction...`)
+      
+      console.log('Sending transaction to contract...', {
+        contractAddress: eventTicketingAddress,
+        functionName: 'register',
+        args: [BigInt(event.id)],
+        value: requiredAmount.toString()
+      })
+      
       // Call the smart contract to register for the event
       try {
-        const result = writeContract({
+        const result = await writeContract({
           address: eventTicketingAddress,
           abi: eventTicketingAbi,
           functionName: 'register',
           args: [BigInt(event.id)],
-          value: event.originalPrice,
+          value: requiredAmount,
         })
         
-        console.log('Write contract result:', result)
+        console.log('Transaction submitted successfully:', result)
       } catch (contractError) {
-        console.error('Contract call error:', contractError)
-        toast.error(`Contract call failed`)
+        console.error('Contract call failed:', contractError)
+        let errorMessage = 'Failed to purchase ticket'
+        
+        if (contractError instanceof Error) {
+          errorMessage += `: ${contractError.message}`
+          
+          // Handle specific error cases
+          if (contractError.message.includes('insufficient funds')) {
+            errorMessage = 'Insufficient funds for this transaction.'
+          } else if (contractError.message.includes('rejected')) {
+            errorMessage = 'Transaction was rejected by your wallet.'
+          } else if (contractError.message.includes('already registered')) {
+            errorMessage = 'You are already registered for this event.'
+          }
+        }
+        
+        toast.error(errorMessage)
         setPurchasing(false)
       }
 
     } catch (error) {
       console.error("Purchase error:", error)
-      toast.error("Transaction failed. Please check your wallet and try again.")
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process purchase'
+      toast.error(`Transaction failed: ${errorMessage}`)
       setPurchasing(false)
     }
   }
