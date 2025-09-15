@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAccount, useReadContract, useWaitForTransactionReceipt } from 'wagmi'
-import { Search, Filter, TrendingUp, Clock, Calendar, MapPin, Users, Tag, Sparkles, AlertCircle } from "lucide-react"
+import { useAccount, useReadContract } from 'wagmi'
+import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
@@ -49,7 +49,7 @@ interface MarketplaceEvent {
 
 export default function Marketplace() {
   const router = useRouter()
-  const { address, isConnected, chainId } = useAccount()
+  const { isConnected, chainId } = useAccount()
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
@@ -66,7 +66,7 @@ export default function Marketplace() {
     functionName: 'getTotalTickets',
   })
 
-  const { data: recentTickets, error: recentTicketsError } = useReadContract({
+  const { data: recentTickets } = useReadContract({
     address: eventTicketingAddress,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
@@ -83,10 +83,10 @@ export default function Marketplace() {
   // Transform blockchain data to marketplace format
   useEffect(() => {
     if (recentTickets && Array.isArray(recentTickets)) {
-      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData, index: number) => {
+      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
         const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
         const now = new Date()
-        const isUpcoming = eventDate > now
+        // const isUpcoming = eventDate > now
         const isPassed = eventDate < now
         const isCanceled = ticket.canceled
         const isClosed = ticket.closed
@@ -107,7 +107,7 @@ export default function Marketplace() {
             category = metadata.category || "Event"
             image = metadata.image || "/placeholder.svg"
           }
-        } catch (e) {
+        } catch  {
           console.log("Could not parse metadata")
         }
 
@@ -371,9 +371,11 @@ export default function Marketplace() {
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
+                {[...filteredEvents]
+                  .sort((a, b) => (sortBy === "recent" ? b.id - a.id : a.id - b.id))
+                  .map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
               </div>
             </div>
           )}

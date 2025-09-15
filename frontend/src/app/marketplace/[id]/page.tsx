@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { eventTicketingAbi, eventTicketingAddress } from "@/lib/addressAndAbi"
+import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { Abi, formatEther, parseEther } from "viem"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Users, Ticket, Loader2, ArrowLeft, Shield, Clock, Copy, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react"
@@ -63,7 +63,7 @@ export default function EventDetailPage() {
       setCopiedField(field)
       toast.success(`${field} copied to clipboard!`)
       setTimeout(() => setCopiedField(null), 2000)
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy to clipboard")
     }
   }
@@ -99,6 +99,7 @@ export default function EventDetailPage() {
       
       if (!eventData) {
         console.log('No event data received from contract')
+        setIsLoading(false)
         return
       }
       
@@ -115,12 +116,21 @@ export default function EventDetailPage() {
             location,
             closed,
             canceled,
-            metadata,
             maxSupply,
             sold,
-            totalCollected,
-            proceedsWithdrawn
-          ] = eventData as any  
+          ] = eventData as [
+            bigint,         // id
+            string,         // creator
+            bigint,         // price
+            string,         // eventName
+            string,         // description
+            bigint,         // eventTimestamp
+            string,         // location
+            boolean,        // closed
+            boolean,        // canceled
+            bigint,         // maxSupply
+            bigint          // sold
+          ]
 
           console.log('Parsed event data:', {
             id,
@@ -182,7 +192,7 @@ export default function EventDetailPage() {
           console.log('Final Status:', status)
 
           setEvents({
-            id: id,
+            id: Number(id),
             creator,
             price: formatEther(price),
             eventName,
@@ -211,26 +221,6 @@ export default function EventDetailPage() {
     processEventData()
   }, [eventData, isConnected, router, params.id, checkingRegistration, isRegistered])
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-slate-800/50 rounded-xl border border-purple-500/30 backdrop-blur-sm max-w-md mx-4">
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-red-400" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Wallet Not Connected</h2>
-          <p className="text-slate-300 mb-4">Please connect your wallet to view event details and purchase tickets.</p>
-          <Button 
-            onClick={() => router.push('/')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-          >
-            Go to Home
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   const handleBuyTicket = async () => {
     if (!events) {
       toast.error("❗ Event data not available")
@@ -243,8 +233,8 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (chainId !== 11142220) {
-      toast.error("⚠️ Please switch to Celo Sepolia testnet")
+    if (chainId !== 50312) {
+      toast.error("⚠️ Please switch to Somnia testnet")
       return
     }
 
@@ -256,7 +246,7 @@ export default function EventDetailPage() {
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
       
-      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} CELO`)
+      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} STT`)
       
       writeContract({
         address: eventTicketingAddress as `0x${string}`,
@@ -305,29 +295,29 @@ export default function EventDetailPage() {
   }, [contractError])
 
   useEffect(() => {
-      if (writeError) {
-        console.error("Write contract error:", writeError)
-        setPurchasing(false)
-        
-        // Check for specific error types with enhanced messages
-        if (writeError.message.includes("insufficient funds")) {
-          toast.error("💰 Insufficient funds for transaction. Please check your balance.")
-        } else if (writeError.message.includes("rejected")) {
-          toast.error("❌ Transaction was rejected by user.")
-        } else if (writeError.message.includes("network")) {
-          toast.error("🌐 Network error. Please check your connection.")
-        } else if (writeError.message.includes("reverted")) {
-          toast.error("⚠️ Transaction failed: Execution reverted.")
-        } else if (writeError.message.includes("RPC")) {
-          toast.error("🔄 Transaction failed: Internal JSON-RPC error. Please try again.")
-        } else {
-          toast.error(`❗ Transaction failed: ${writeError.message.slice(0, 100)}...`)
-        }
-      }
-    }, [writeError])
+    if (!writeError) return;
+
+    console.error("Write contract error:", writeError);
+    setPurchasing(false);
+
+    // Check for specific error types with enhanced messages
+    if (writeError.message.includes("insufficient funds")) {
+      toast.error("💰 Insufficient funds for transaction. Please check your balance.");
+    } else if (writeError.message.includes("rejected")) {
+      toast.error("❌ Transaction was rejected by user.");
+    } else if (writeError.message.includes("network")) {
+      toast.error("🌐 Network error. Please check your connection.");
+    } else if (writeError.message.includes("reverted")) {
+      toast.error("⚠️ Transaction failed: Execution reverted.");
+    } else if (writeError.message.includes("RPC")) {
+      toast.error("🔄 Transaction failed: Internal JSON-RPC error. Please try again.");
+    } else {
+      toast.error(`❗ Transaction failed: ${writeError.message.slice(0, 100)}...`);
+    }
+  }, [writeError]);
 
   const isProcessing = purchasing || isPending || isConfirming
-  const isCorrectNetwork = chainId === 11142220
+  const isCorrectNetwork = chainId === 50312
 
   if (isLoading) {
     return (
@@ -488,7 +478,7 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-slate-300 text-sm">Price per ticket</p>
                       <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {events?.price} CELO
+                        {events?.price} STT
                       </p>
                     </div>
                     <div className="text-right">
@@ -511,7 +501,7 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Celo Sepolia testnet
+                        Please switch to Somnia testnet
                       </p>
                     </div>
                   )}

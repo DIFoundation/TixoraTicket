@@ -12,7 +12,10 @@ const config = getDefaultConfig({
     projectId: '505bbca624bfefde94e149726255a254',
     chains: [somniaTestnet],
     transports: {
-      [somniaTestnet.id]: http('https://dream-rpc.somnia.network'),
+      [somniaTestnet.id]: http('https://dream-rpc.somnia.network', {
+        timeout: 60000,
+        retryDelay: 2
+      })
     }, 
   });
 

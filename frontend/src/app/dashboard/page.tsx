@@ -42,7 +42,7 @@ export default function Dashboard() {
     if (!recentTicketsData || !address) return
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tickets = recentTicketsData as any[]
+    const tickets = recentTicketsData as Ticket[]
     
     // Calculate events created by user
     const createdByUser = tickets.filter(ticket => 
@@ -104,15 +104,29 @@ export default function Dashboard() {
     },
   ], [userStats])
 
+  interface Ticket {
+    id: bigint;
+    creator: string;
+    eventName: string;
+    eventTimestamp: bigint;
+    price: bigint;
+    canceled: boolean;
+    closed: boolean;
+    passed: boolean;
+    sold: bigint;
+    maxSupply: bigint;
+    totalCollected: bigint;
+  }
+
   // Generate recent activity from tickets data
   const recentActivity = useMemo(() => {
     if (!recentTicketsData || !address) return []
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tickets = recentTicketsData as any[]
+    const tickets = recentTicketsData as Ticket[]
     
     return tickets
       .filter(ticket => ticket.creator.toLowerCase() === address.toLowerCase())
+      .sort((a, b) => new Date(Number(b.eventTimestamp)).getTime() - new Date(Number(a.eventTimestamp)).getTime())
       .slice(0, 5)
       .map((ticket) => ({
         id: Number(ticket.id),
@@ -120,7 +134,7 @@ export default function Dashboard() {
         time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
         amount: `${formatEther(ticket.price)} STT`,
         type: ticket.canceled ? "cancel" : "create",
-        status: ticket.closed ? "Closed" : ticket.canceled ? "Canceled" : "Active",
+        status: ticket.closed ? "Closed" : ticket.canceled ? "Canceled" : ticket.passed ? "Passed": ticket.sold >= ticket.maxSupply ? "Sold Out" : "Active",
         sold: Number(ticket.sold),
         maxSupply: Number(ticket.maxSupply)
       }))
@@ -130,9 +144,8 @@ export default function Dashboard() {
   const platformStats = useMemo(() => {
     if (!recentTicketsData) return null
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tickets = recentTicketsData as any[]
-    const activeEvents = tickets.filter(t => !t.closed && !t.canceled).length
+    const tickets = recentTicketsData as Ticket[]
+    const activeEvents = tickets.filter(t => !t.closed && !t.canceled && !t.passed).length
     const totalSold = tickets.reduce((sum, t) => sum + Number(t.sold), 0)
     const totalRevenue = tickets.reduce((sum, t) => sum + Number(t.totalCollected), 0)
     
@@ -322,6 +335,10 @@ export default function Dashboard() {
                                 ? 'text-green-300 bg-green-500/10 border-green-500/50'
                                 : activity.status === 'Canceled'
                                 ? 'text-red-300 bg-red-500/10 border-red-500/50'
+                                : activity.status === 'Sold Out'
+                                ? 'text-yellow-300 bg-yellow-500/10 border-yellow-500/50'
+                                : activity.status === 'Passed'
+                                ? 'text-gray-300 bg-gray-500/10 border-gray-500/50'
                                 : 'text-gray-300 bg-gray-500/10 border-gray-500/50'
                             }`}
                           >
