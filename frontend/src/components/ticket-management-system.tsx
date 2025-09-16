@@ -86,7 +86,7 @@ export function TicketManagementSystem() {
           location: ticket.location,
           status: isPast ? "past" as const : "upcoming" as const,
           qrCode: ticket.id.toString(),
-          price: formatEther(ticket.price) + " CELO",
+          price: formatEther(ticket.price) + " STT",
           purchaseDate: new Date(Number(ticket.eventTimestamp) * 1000).toISOString(),
           txHash: "0x" + ticket.id.toString(16).padStart(64, '0')
         } satisfies NFTTicketDisplay
@@ -323,10 +323,10 @@ export function TicketManagementSystem() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => window.open(`https://celoscan.io/tx/${ticket.txHash}`, "_blank")}
+                          onClick={() => window.open(`https://somnia-testnet.socialscan.io/tx/${ticket.txHash}`, "_blank")}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          View on Celoscan
+                          View on Explorer
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -442,11 +442,11 @@ export function TicketManagementSystem() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => window.open(`https://celoscan.io/tx/${selectedTicket.txHash}`, "_blank")}
+                  onClick={() => window.open(`https://somnia-testnet.socialscan.io/tx/${selectedTicket.txHash}`, "_blank")}
                   className="border-slate-600 text-slate-300 hover:border-purple-500"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View on Celoscan
+                  View on Explorer
                 </Button>
                 <Button
                   onClick={() => handleTicketAction(selectedTicket, "qr")}
