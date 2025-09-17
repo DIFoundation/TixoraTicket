@@ -17,9 +17,8 @@ import {
 import { Label } from "@/components/ui/label"
 import { useAccount, useReadContract, useReadContracts, usePublicClient, useBlockNumber } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
-import { useUserTickets, useNFTTokenDetails, useTransferTicket } from "@/hooks/use-contracts"
+import { useTransferTicket } from "@/hooks/use-contracts"
 import Link from "next/link"
-import Image from "next/image"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { Abi, formatEther } from 'viem'
 
@@ -50,6 +49,8 @@ export function TicketManagementSystem() {
   const { transferTicket, isPending: isTransferring, isConfirmed } = useTransferTicket()
   const publicClient = usePublicClient()
   const { data: blockNumber } = useBlockNumber()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _blockNumber = blockNumber
 
   // Fetch all recent tickets
   const { data: allTickets } = useReadContract({
@@ -133,7 +134,7 @@ export function TicketManagementSystem() {
           console.log(`Found ${allLogs.length} total logs from contract`)
           
           // Filter for registration-related transactions
-          let logs = allLogs.filter(log => {
+          const logs = allLogs.filter(log => {
             // Check if this log has topics that might indicate a registration
             if (log.topics && log.topics.length >= 3) {
               try {
@@ -144,7 +145,7 @@ export function TicketManagementSystem() {
                 
                 return ticketIdFromLog === BigInt(ticket.id) && 
                        registrantFromLog === userAddressLower.padStart(66, '0x000000000000000000000000')
-              } catch (e) {
+              } catch {
                 return false
               }
             }
@@ -192,7 +193,6 @@ export function TicketManagementSystem() {
     }
   }, [isConfirmed])
 
-  const categories = ["all", "upcoming", "past"]
 
   const filteredTickets = userTickets.filter((ticket) => {
     const matchesSearch = ticket.eventTitle.toLowerCase().includes(searchQuery.toLowerCase())
@@ -237,7 +237,6 @@ export function TicketManagementSystem() {
     }
   }
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""
 
   const handleRefresh = async () => {
     // Implement refresh logic if needed, or remove this function if not used
@@ -524,7 +523,7 @@ export function TicketManagementSystem() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard(selectedTicket.txHash)}
+                        onClick={() => selectedTicket.txHash && copyToClipboard(selectedTicket.txHash)}
                         className="text-slate-400 hover:text-white"
                       >
                         <Copy className="w-3 h-3" />

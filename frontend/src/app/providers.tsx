@@ -1,11 +1,10 @@
 "use client";
 
-import { RainbowKitProvider, darkTheme, getDefaultConfig, lightTheme } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig } from "wagmi";
-import { somniaTestnet } from "wagmi/chains";
 import "@rainbow-me/rainbowkit/styles.css";
-import { http, createPublicClient, createWalletClient, custom } from "viem"
+import { http } from "viem"
 import { injected, metaMask } from "wagmi/connectors";
 
 // Create a fresh Somnia testnet configuration with unique chain ID to bypass circuit breaker
