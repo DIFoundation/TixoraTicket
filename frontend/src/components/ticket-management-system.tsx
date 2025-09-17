@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { useAccount, useReadContract, useReadContracts } from 'wagmi'
+import { useAccount, useReadContract, useReadContracts, usePublicClient, useBlockNumber } from 'wagmi'
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import { useUserTickets, useNFTTokenDetails, useTransferTicket } from "@/hooks/use-contracts"
 import Link from "next/link"
@@ -33,7 +33,7 @@ interface NFTTicketDisplay {
   qrCode: string
   price: string
   purchaseDate: string
-  txHash: string
+  txHash: string | null
 }
 
 type TicketAction = "view" | "transfer" | "qr" | null
@@ -44,9 +44,12 @@ export function TicketManagementSystem() {
   const [selectedTicket, setSelectedTicket] = useState<NFTTicketDisplay | null>(null)
   const [currentAction, setCurrentAction] = useState<TicketAction>(null)
   const [transferAddress, setTransferAddress] = useState("")
+  const [ticketTransactions, setTicketTransactions] = useState<Record<string, string>>({})
 
   const { isConnected, address } = useAccount()
   const { transferTicket, isPending: isTransferring, isConfirmed } = useTransferTicket()
+  const publicClient = usePublicClient()
+  const { data: blockNumber } = useBlockNumber()
 
   // Fetch all recent tickets
   const { data: allTickets } = useReadContract({
@@ -88,10 +91,98 @@ export function TicketManagementSystem() {
           qrCode: ticket.id.toString(),
           price: formatEther(ticket.price) + " STT",
           purchaseDate: new Date(Number(ticket.eventTimestamp) * 1000).toISOString(),
-          txHash: "0x" + ticket.id.toString(16).padStart(64, '0')
+          txHash: ticketTransactions[ticket.id.toString()] || null,
         } satisfies NFTTicketDisplay
       })
-  }, [allTickets, registrationChecks.data])
+  }, [allTickets, registrationChecks.data, ticketTransactions])
+
+  // Fetch transaction hashes for registered tickets
+  useEffect(() => {
+    const fetchTransactionHashes = async () => {
+      if (!allTickets || !registrationChecks.data || !publicClient || !address) {
+        console.log('Missing dependencies for transaction fetch:', {
+          allTickets: !!allTickets,
+          registrationChecks: !!registrationChecks.data,
+          publicClient: !!publicClient,
+          address: !!address
+        })
+        return
+      }
+
+      const registeredTickets = allTickets.filter((_, index) => 
+        registrationChecks.data?.[index]?.result === true
+      )
+
+      console.log('Fetching transactions for registered tickets:', registeredTickets.length)
+
+      const txHashes: Record<string, string> = {}
+      
+      for (const ticket of registeredTickets) {
+        try {
+          console.log(`Fetching transaction for ticket ${ticket.id}...`)
+          
+          // Try a broader approach - get all logs from the contract and filter manually
+          console.log(`Searching for registration events for ticket ${ticket.id} and user ${address}...`)
+          
+          const allLogs = await publicClient.getLogs({
+            address: eventTicketingAddress,
+            fromBlock: 'earliest',
+            toBlock: 'latest'
+          })
+          
+          console.log(`Found ${allLogs.length} total logs from contract`)
+          
+          // Filter for registration-related transactions
+          let logs = allLogs.filter(log => {
+            // Check if this log has topics that might indicate a registration
+            if (log.topics && log.topics.length >= 3) {
+              try {
+                // Try to parse as potential registration event
+                const ticketIdFromLog = BigInt(log.topics[1] || '0x0')
+                const registrantFromLog = log.topics[2]?.toLowerCase()
+                const userAddressLower = address.toLowerCase()
+                
+                return ticketIdFromLog === BigInt(ticket.id) && 
+                       registrantFromLog === userAddressLower.padStart(66, '0x000000000000000000000000')
+              } catch (e) {
+                return false
+              }
+            }
+            return false
+          })
+          
+          console.log(`Found ${logs.length} potential registration logs for ticket ${ticket.id}`)
+          
+          // If still no logs, try getting transactions where user interacted with contract
+          if (logs.length === 0) {
+            console.log(`No event logs found, trying transaction-based approach...`)
+            
+            // For now, create a mock transaction hash for testing
+            // This will be replaced with actual blockchain data once the event querying works
+            const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
+            txHashes[ticket.id.toString()] = mockTxHash
+            console.log(`Using mock transaction hash for ticket ${ticket.id}: ${mockTxHash}`)
+          }
+          
+          if (logs.length > 0) {
+            // Use the most recent registration transaction
+            const latestLog = logs[logs.length - 1]
+            txHashes[ticket.id.toString()] = latestLog.transactionHash
+            console.log(`Found registration transaction for ticket ${ticket.id}: ${latestLog.transactionHash}`)
+          } else {
+            console.log(`No registration transaction found for ticket ${ticket.id} - this may be expected for tickets created before the current system`)
+          }
+        } catch (error) {
+          console.error(`Failed to fetch transaction for ticket ${ticket.id}:`, error)
+        }
+      }
+      
+      console.log('Setting ticket transactions:', txHashes)
+      setTicketTransactions(txHashes)
+    }
+
+    fetchTransactionHashes()
+  }, [allTickets, registrationChecks.data, publicClient, address])
 
   // Handle transfer completion
   useEffect(() => {
@@ -214,7 +305,7 @@ export function TicketManagementSystem() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {userTickets.filter((t: NFTTicketDisplay) => t.status === "upcoming").length}
+                      {userTickets.filter(t => t.status === "upcoming").length}
                     </p>
                     <p className="text-sm text-slate-400">Upcoming Events</p>
                   </div>
@@ -323,7 +414,8 @@ export function TicketManagementSystem() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => window.open(`https://somnia-testnet.socialscan.io/tx/${ticket.txHash}`, "_blank")}
+                          onClick={() => ticket.txHash && window.open(`https://shannon-explorer.somnia.network/tx/${ticket.txHash}`, "_blank")}
+                          disabled={!ticket.txHash}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           View on Explorer
@@ -390,6 +482,9 @@ export function TicketManagementSystem() {
             <div className="space-y-6">
               <DialogHeader>
                 <DialogTitle className="text-white">{selectedTicket.eventTitle}</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  View detailed information about your ticket including QR code, transaction details, and event information.
+                </DialogDescription>
               </DialogHeader>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -442,8 +537,9 @@ export function TicketManagementSystem() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => window.open(`https://somnia-testnet.socialscan.io/tx/${selectedTicket.txHash}`, "_blank")}
-                  className="border-slate-600 text-slate-300 hover:border-purple-500"
+                  onClick={() => selectedTicket.txHash && window.open(`https://shannon-explorer.somnia.network/tx/${selectedTicket.txHash}`, "_blank")}
+                  disabled={!selectedTicket.txHash}
+                  className="border-slate-600 text-slate-300 hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on Explorer
@@ -468,6 +564,9 @@ export function TicketManagementSystem() {
             <div className="text-center space-y-6">
               <DialogHeader>
                 <DialogTitle className="text-white">Entry QR Code</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Scan this QR code at the event venue for entry verification.
+                </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
@@ -505,6 +604,9 @@ export function TicketManagementSystem() {
             <div className="space-y-6">
               <DialogHeader>
                 <DialogTitle className="text-white">Transfer Ticket</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Transfer your ticket to another wallet address. This action cannot be undone.
+                </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">

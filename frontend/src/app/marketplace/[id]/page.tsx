@@ -116,8 +116,12 @@ export default function EventDetailPage() {
             location,
             closed,
             canceled,
+            metadata,
             maxSupply,
             sold,
+            totalCollected,
+            totalRefunded,
+            proceedsWithdrawn
           ] = eventData as [
             bigint,         // id
             string,         // creator
@@ -128,9 +132,17 @@ export default function EventDetailPage() {
             string,         // location
             boolean,        // closed
             boolean,        // canceled
+            string,         // metadata
             bigint,         // maxSupply
-            bigint          // sold
+            bigint,         // sold
+            bigint,         // totalCollected
+            bigint,         // totalRefunded
+            boolean         // proceedsWithdrawn
           ]
+
+          // Handle bigint conversion properly
+          const maxSupplyNum = maxSupply ? Number(maxSupply) : 0
+          const soldNum = sold ? Number(sold) : 0
 
           console.log('Parsed event data:', {
             id,
@@ -140,8 +152,12 @@ export default function EventDetailPage() {
             location,
             closed,
             canceled,
-            maxSupply: Number(maxSupply),
-            sold: Number(sold)
+            metadata,
+            maxSupply: maxSupplyNum,
+            sold: soldNum,
+            totalCollected: Number(totalCollected),
+            totalRefunded: Number(totalRefunded),
+            proceedsWithdrawn
           })
 
           if (!eventName) {
@@ -155,7 +171,15 @@ export default function EventDetailPage() {
           
           // Calculate status conditions
           const isPassed = eventDate < now
-          const ticketsLeft = Number(maxSupply) - Number(sold)
+          
+          const ticketsLeft = Math.max(0, maxSupplyNum - soldNum)
+          
+          console.log('Final calculations:', {
+            maxSupplyNum,
+            soldNum,
+            ticketsLeft,
+            isPassed
+          })
           
           // Format the date for display
           let formattedDate = 'Date not available'
@@ -185,7 +209,7 @@ export default function EventDetailPage() {
           if (canceled) status = 'canceled'
           else if (closed) status = 'closed'
           else if (isPassed) status = 'passed'
-          else if (ticketsLeft === 0) status = 'sold_out'
+          else if (ticketsLeft <= 0) status = 'sold_out'
           else if (checkingRegistration && isRegistered) status = 'registered'
           else status = 'active'
 
@@ -203,8 +227,8 @@ export default function EventDetailPage() {
             canceled,
             status,
             image: "/metaverse-fashion-show.png",
-            maxSupply: Number(maxSupply),
-            sold: Number(sold),
+            maxSupply: maxSupplyNum,
+            sold: soldNum,
             ticketsLeft,
             eventTimestamp: Number(eventTimestamp)
           })
@@ -484,13 +508,13 @@ export default function EventDetailPage() {
                     <div className="text-right">
                       <p className="text-slate-300 text-sm">Available</p>
                       <p className="text-white font-medium text-lg">
-                        {events?.ticketsLeft} / {events?.maxSupply}
+                        {events?.ticketsLeft ?? 0} / {events?.maxSupply ?? 0}
                       </p>
                       <div className="w-16 h-2 bg-slate-700 rounded-full mt-1">
                         <div 
                           className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-300"
                           style={{ 
-                            width: `${events?.maxSupply ? (events.sold / events.maxSupply) * 100 : 0}%` 
+                            width: `${events?.maxSupply && events?.maxSupply > 0 ? Math.min(100, (events.sold / events.maxSupply) * 100) : 0}%` 
                           }}
                         />
                       </div>
@@ -510,7 +534,7 @@ export default function EventDetailPage() {
                     <Button 
                       onClick={handleBuyTicket}
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || events?.ticketsLeft === 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
                     >
                       {checkingRegistration ? (
                         <>
@@ -544,7 +568,7 @@ export default function EventDetailPage() {
                       )}
                     </Button>
                     
-                    {events?.ticketsLeft && events.ticketsLeft < 10 && events.status === 'active' && (
+                    {events?.ticketsLeft !== undefined && events.ticketsLeft < 10 && events.ticketsLeft > 0 && events.status === 'active' && (
                       <div className="mt-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                         <p className="text-sm text-amber-400 text-center flex items-center justify-center gap-1">
                           <AlertTriangle className="w-4 h-4" />

@@ -100,12 +100,12 @@ export default function Marketplace() {
 
         // Parse metadata for additional info
         let category = "Event"
-        let image = "/placeholder.svg"
+        let image = "/metaverse-fashion-show.png"
         try {
           if (ticket.metadata) {
             const metadata = JSON.parse(ticket.metadata)
             category = metadata.category || "Event"
-            image = metadata.image || "/placeholder.svg"
+            image = metadata.image || "/metaverse-fashion-show.png"
           }
         } catch  {
           console.log("Could not parse metadata")

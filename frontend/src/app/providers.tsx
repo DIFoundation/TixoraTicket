@@ -23,7 +23,7 @@ const freshSomniaTestnet = {
     },
   },
   blockExplorers: {
-    default: { name: 'Explorer', url: 'https://somnia-testnet.socialscan.io' },
+    default: { name: 'Shannon Explorer', url: 'https://shannon-explorer.somnia.network' },
   },
   testnet: true,
 } as const
