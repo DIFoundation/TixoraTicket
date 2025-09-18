@@ -44,24 +44,6 @@ Modern web application built with Next.js 15:
 - TicketNft: `0xF708183DA2f773c213F93A3220eC5922fd73C720`
 - Explorer: [Shannon Explorer](https://shannon-explorer.somnia.network)
 
-## Quick Start
-
-### Prerequisites
-- Node.js v18 or higher
-- Web3 wallet (MetaMask recommended)
-- STT tokens for Somnia testnet
-
-### Setup
-1. Clone the repository
-2. Install dependencies for both frontend and smart contracts
-3. Configure environment variables
-4. Deploy contracts or use existing deployed addresses
-5. Start the development server
-
-**Detailed Instructions:**
-- [Frontend Setup Guide](./frontend/README.md)
-- [Smart Contract Development](./smcontract/README.md)
-
 ## Usage
 
 ### For Event Attendees
