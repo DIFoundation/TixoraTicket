@@ -1,51 +1,23 @@
 "use client";
 
-import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme, getDefaultConfig, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig } from "wagmi";
+import { WagmiProvider } from "wagmi";
+import { somniaTestnet } from "wagmi/chains";
 import "@rainbow-me/rainbowkit/styles.css";
 import { http } from "viem"
-import { injected, metaMask } from "wagmi/connectors";
 
-// Create a fresh Somnia testnet configuration with unique chain ID to bypass circuit breaker
-const freshSomniaTestnet = {
-  id: 50312,
-  name: 'Somnia Testnet',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'STT',
-    symbol: 'STT',
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://dream-rpc.somnia.network'],
-    },
-  },
-  blockExplorers: {
-    default: { name: 'Shannon Explorer', url: 'https://shannon-explorer.somnia.network' },
-  },
-  testnet: true,
-} as const
-
-const config = createConfig({
-  chains: [freshSomniaTestnet],
-  connectors: [
-    injected(),
-    metaMask({
-      dappMetadata: {
-        name: 'Tixora Ticket',
-        url: 'https://tixora.com',
-      },
-    }),
-  ],
-  transports: {
-    [freshSomniaTestnet.id]: http('https://dream-rpc.somnia.network', {
-      timeout: 30000,
-      retryCount: 0,
-      batch: false,
-    }),
-  },
-});
+const config = getDefaultConfig({
+    appName: 'Tixora Ticket',
+    projectId: '505bbca624bfefde94e149726255a254',
+    chains: [somniaTestnet],
+    transports: {
+      [somniaTestnet.id]: http('https://dream-rpc.somnia.network', {
+        timeout: 60000,
+        retryDelay: 2
+      })
+    }, 
+  });
 
 const queryClient = new QueryClient();
 
