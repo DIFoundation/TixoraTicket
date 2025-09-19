@@ -10,6 +10,7 @@ import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { useEventRegistration } from "@/hooks/use-event-registration"
 import { useAccount } from "wagmi"
 import { toast } from "react-toastify"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 interface MarketplaceEvent {
   id: number
@@ -194,8 +195,8 @@ export function EventCard({ event }: EventCardProps) {
     }
   }, [receiptError])
 
-  // Check if user is on the correct network
-  const isCorrectNetwork = chainId // Somnia testnet
+  // Check if user is on the correct network (only relevant when connected)
+  const isCorrectNetwork = !isConnected || chainId // Somnia testnet - allow if not connected
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -300,7 +301,7 @@ export function EventCard({ event }: EventCardProps) {
                   <Ticket className="h-3 w-3 mr-1" />
                   Registered
                 </Button>
-              ) : !isCorrectNetwork ? (
+              ) : isConnected && !isCorrectNetwork ? (
                 <Button 
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={handleNetworkSwitch}
@@ -308,6 +309,19 @@ export function EventCard({ event }: EventCardProps) {
                 >
                   Wrong Network
                 </Button>
+              ) : !isConnected ? (
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <Button
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                      onClick={openConnectModal}
+                      size="sm"
+                    >
+                      <Ticket className="h-3 w-3 mr-1" />
+                      Connect to Buy
+                    </Button>
+                  )}
+                </ConnectButton.Custom>
               ) : (
                 <Button
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"

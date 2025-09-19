@@ -4,16 +4,20 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Calendar, MapPin, Users, Ticket, Star, Shield, Zap, Globe, RefreshCw, ChevronDown, Play, Pause } from "lucide-react"
+import { ArrowRight, Calendar, MapPin, Users, Ticket, Star, Shield, Zap, Globe, RefreshCw, ChevronDown, Play, Pause, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
 import Image from "next/image"
 import Link from "next/link"
+import { useMarketplaceEvents } from "@/hooks/use-marketplace-events"
+import { EventCard } from "@/components/event-card"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 export default function Home() {
   const { isConnected } = useAccount()
   const router = useRouter()
   const [isVisible, setIsVisible] = useState(false)
+  const { getFeaturedEvents, loading: eventsLoading } = useMarketplaceEvents()
 
   useEffect(() => {
     setIsVisible(true)
@@ -130,20 +134,58 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Event Carousel Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              ... EVENTS ...
-          </div>
+          {/* Featured Events Grid */}
+          {eventsLoading ? (
+            <div className="text-center py-12">
+              <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading featured events...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {getFeaturedEvents(4).length > 0 ? (
+                getFeaturedEvents(4).map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Featured Events</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Be the first to create an amazing event!
+                  </p>
+                  <Button
+                    onClick={() => router.push('/create-event')}
+                    className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700"
+                  >
+                    Create Event
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="text-center mt-12">
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => router.push('/marketplace')}
-              // className="px-8 py-4 text-lg hover:scale-105 transition-all duration-300 border-primary/50 hover:bg-primary/10"
-            >
-              View All Events <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            {isConnected ? (
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => router.push('/marketplace')}
+              >
+                View All Events <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            ) : (
+              <ConnectButton.Custom>
+                {({ openConnectModal }) => (
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={openConnectModal}
+                  >
+                    View All Events <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )}
+              </ConnectButton.Custom>
+            )}
           </div>
         </div>
       </section>

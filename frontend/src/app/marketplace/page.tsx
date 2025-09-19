@@ -6,46 +6,13 @@ import { Input } from "@/components/ui/input"
 import { useAccount, useReadContract } from 'wagmi'
 import { Search, TrendingUp, Clock, Calendar, Users, Sparkles, AlertCircle } from "lucide-react"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
-import { formatEther } from "viem"
 import { EventCard } from "@/components/event-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
+import { useMarketplaceEvents, MarketplaceEvent } from "@/hooks/use-marketplace-events"
 
-interface TicketData {
-  id: number
-  creator: string
-  price: bigint
-  eventName: string
-  description: string
-  eventTimestamp: bigint
-  location: string
-  closed: boolean
-  canceled: boolean
-  metadata: string
-  maxSupply: bigint
-  sold: bigint
-  totalCollected: bigint
-  totalRefunded: bigint
-  proceedsWithdrawn: boolean
-}
-
-interface MarketplaceEvent {
-  id: number
-  eventTitle: string
-  price: string
-  date: string
-  location: string
-  image: string
-  attendees: number
-  ticketsLeft: number
-  status: string
-  category: string
-  trending: boolean
-  createdAt: string
-  originalPrice: bigint
-}
 
 export default function Marketplace() {
   const router = useRouter()
@@ -53,8 +20,7 @@ export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("trending")
   const [activeTab, setActiveTab] = useState("upcoming")
-  const [events, setEvents] = useState<MarketplaceEvent[]>([])
-  const [loading, setLoading] = useState(true)
+  const { events, loading } = useMarketplaceEvents()
   
   // Check if user is on the correct network
   const isCorrectNetwork = chainId // Somnia testnet
@@ -66,12 +32,6 @@ export default function Marketplace() {
     functionName: 'getTotalTickets',
   })
 
-  const { data: recentTickets } = useReadContract({
-    address: eventTicketingAddress,
-    abi: eventTicketingAbi,
-    functionName: 'getRecentTickets',
-  })
-
   // Handle contract errors
   useEffect(() => {
     if (totalTicketsError) {
@@ -79,63 +39,6 @@ export default function Marketplace() {
       console.error('Total tickets error:', totalTicketsError)
     }
   }, [totalTicketsError])
-
-  // Transform blockchain data to marketplace format
-  useEffect(() => {
-    if (recentTickets && Array.isArray(recentTickets)) {
-      const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
-        const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
-        const now = new Date()
-        // const isUpcoming = eventDate > now
-        const isPassed = eventDate < now
-        const isCanceled = ticket.canceled
-        const isClosed = ticket.closed
-        const ticketsLeft = Number(ticket.maxSupply - ticket.sold)
-        
-        let status = "upcoming"
-        if (isCanceled) status = "canceled"
-        else if (isClosed) status = "closed"
-        else if (isPassed) status = "passed"
-        else if (ticketsLeft === 0) status = "sold_out"
-
-        // Parse metadata for additional info
-        let category = "Event"
-        let image = "/metaverse-fashion-show.png"
-        try {
-          if (ticket.metadata) {
-            const metadata = JSON.parse(ticket.metadata)
-            category = metadata.category || "Event"
-            image = metadata.image || "/metaverse-fashion-show.png"
-          }
-        } catch  {
-          console.log("Could not parse metadata")
-        }
-
-        return {
-          id: Number(ticket.id),
-          eventTitle: ticket.eventName,
-          price: `${formatEther(ticket.price)} STT`,
-          date: eventDate.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
-          }),
-          location: ticket.location,
-          image: image,
-          attendees: Number(ticket.maxSupply),
-          ticketsLeft: ticketsLeft,
-          status: status,
-          category: category,
-          trending: ticket.sold > (ticket.maxSupply * BigInt(7)) / BigInt(10), // Trending if 70% sold
-          createdAt: eventDate.toISOString(),
-          originalPrice: ticket.price,
-        }
-      })
-
-      setEvents(transformedEvents)
-      setLoading(false)
-    }
-  }, [recentTickets])
 
   // Redirect to landing page if wallet is not connected
   if (!isConnected) {

@@ -12,16 +12,12 @@ import { formatEther } from "viem"
 import { toast } from "react-toastify"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { useReadContract, useReadContracts } from "wagmi"
+import { useUserStats } from "@/hooks/use-user-stats"
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
   const router = useRouter()
-  const [userStats, setUserStats] = useState({
-    attendedEvents: 0,
-    totalSpent: "0",
-    createdEvents: 0,
-    totalRevenue: "0"
-  })
+  const { userStats, loading: userStatsLoading } = useUserStats()
 
   // Get total tickets count
   const { data: totalTickets, isLoading: loadingTotalTickets } = useReadContract({
@@ -37,38 +33,6 @@ export default function Dashboard() {
     functionName: 'getRecentTickets',
   })
 
-  // Calculate user-specific stats
-  useEffect(() => {
-    if (!recentTicketsData || !address) return
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tickets = recentTicketsData as Ticket[]
-    
-    // Calculate events created by user
-    const createdByUser = tickets.filter(ticket => 
-      ticket.creator.toLowerCase() === address.toLowerCase()
-    )
-    
-    // Calculate total revenue from created events
-    const totalRevenue = createdByUser.reduce((sum, ticket) => 
-      sum + Number(ticket.totalCollected), 0
-    )
-    
-    // Calculate events attended (rough estimation - in real app you'd track registrations)
-    const attendedEvents = tickets.filter(ticket => 
-      ticket.sold > 0 && !ticket.canceled
-    ).length
-    
-    // Calculate estimated spending (this would need actual registration tracking)
-    const estimatedSpent = attendedEvents * 0.01 // Rough estimation
-    
-    setUserStats({
-      attendedEvents: attendedEvents,
-      totalSpent: estimatedSpent.toString(),
-      createdEvents: createdByUser.length,
-      totalRevenue: formatEther(BigInt(totalRevenue))
-    })
-  }, [recentTicketsData, address])
 
   // Stats cards data
   const stats = useMemo(() => [
@@ -82,7 +46,7 @@ export default function Dashboard() {
     {
       label: "Total Spent",
       value: `${userStats.totalSpent} STT`,
-      change: userStats.attendedEvents > 0 ? "Estimated spending" : "No purchases yet",
+      change: userStats.attendedEvents > 0 ? "Based on ticket ownership" : "No purchases yet",
       icon: DollarSign,
       color: "from-green-500 to-emerald-500"
     },
