@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, use } from "react"
 import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,8 @@ import { useTransferTicket } from "@/hooks/use-contracts"
 import Link from "next/link"
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { Abi, formatEther } from 'viem'
+import QRCode from 'qrcode';
+import Image from "next/image"
 
 interface NFTTicketDisplay {
   id: string
@@ -122,59 +124,45 @@ export function TicketManagementSystem() {
         try {
           console.log(`Fetching transaction for ticket ${ticket.id}...`)
           
-          // Try a broader approach - get all logs from the contract and filter manually
-          console.log(`Searching for registration events for ticket ${ticket.id} and user ${address}...`)
-          
-          const allLogs = await publicClient.getLogs({
+          // Get logs for TicketRegistered event
+          // Get logs for Registered event
+          const logs = await publicClient.getLogs({
             address: eventTicketingAddress,
+            event: {
+              type: 'event',
+              name: 'Registered',
+              inputs: [
+                { type: 'uint256', indexed: true, name: 'ticketId' },
+                { type: 'address', indexed: true, name: 'registrant' },
+                { type: 'uint256', indexed: false, name: 'nftTokenId' }
+              ]
+            },
+            args: {
+              ticketId: BigInt(ticket.id),
+              registrant: address.startsWith("0x") ? address : `0x${address}`
+            },
             fromBlock: 'earliest',
             toBlock: 'latest'
           })
           
-          console.log(`Found ${allLogs.length} total logs from contract`)
-          
-          // Filter for registration-related transactions
-          const logs = allLogs.filter(log => {
-            // Check if this log has topics that might indicate a registration
-            if (log.topics && log.topics.length >= 3) {
-              try {
-                // Try to parse as potential registration event
-                const ticketIdFromLog = BigInt(log.topics[1] || '0x0')
-                const registrantFromLog = log.topics[2]?.toLowerCase()
-                const userAddressLower = address.toLowerCase()
-                
-                return ticketIdFromLog === BigInt(ticket.id) && 
-                       registrantFromLog === userAddressLower.padStart(66, '0x000000000000000000000000')
-              } catch {
-                return false
-              }
-            }
-            return false
-          })
-          
-          console.log(`Found ${logs.length} potential registration logs for ticket ${ticket.id}`)
-          
-          // If still no logs, try getting transactions where user interacted with contract
-          if (logs.length === 0) {
-            console.log(`No event logs found, trying transaction-based approach...`)
-            
-            // For now, create a mock transaction hash for testing
-            // This will be replaced with actual blockchain data once the event querying works
-            const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
-            txHashes[ticket.id.toString()] = mockTxHash
-            console.log(`Using mock transaction hash for ticket ${ticket.id}: ${mockTxHash}`)
-          }
+          console.log(`Found ${logs.length} registration logs for ticket ${ticket.id}`)
           
           if (logs.length > 0) {
-            // Use the most recent registration transaction
+            // Get the most recent registration
             const latestLog = logs[logs.length - 1]
             txHashes[ticket.id.toString()] = latestLog.transactionHash
-            console.log(`Found registration transaction for ticket ${ticket.id}: ${latestLog.transactionHash}`)
+            console.log(`Found registration transaction for ticket ${ticket.id}:`, latestLog.transactionHash)
           } else {
-            console.log(`No registration transaction found for ticket ${ticket.id} - this may be expected for tickets created before the current system`)
+            // Fallback to mock hash if no logs found (for development only)
+            const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
+            txHashes[ticket.id.toString()] = mockTxHash
+            console.warn(`No registration logs found for ticket ${ticket.id}, using mock hash`)
           }
         } catch (error) {
           console.error(`Failed to fetch transaction for ticket ${ticket.id}:`, error)
+          // In case of error, still set a mock hash to prevent UI issues
+          const mockTxHash = `0x${ticket.id.toString().padStart(64, '0')}`
+          txHashes[ticket.id.toString()] = mockTxHash
         }
       }
       
@@ -203,7 +191,7 @@ export function TicketManagementSystem() {
       (selectedCategory === "past" && ticket.status === "past")
 
     return matchesSearch && matchesCategory
-  })
+  })  
 
   const handleTicketAction = (ticket: NFTTicketDisplay, action: TicketAction) => {
     setSelectedTicket(ticket)
@@ -237,6 +225,47 @@ export function TicketManagementSystem() {
     }
   }
 
+  const downloadQRCode = async (ticket: NFTTicketDisplay) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const qrData = [
+        `ID:${ticket.id}`,
+        `Event:${ticket.eventTitle.substring(0, 30)}${ticket.eventTitle.length > 30 ? '...' : ''}`,
+        `Date:${new Date(ticket.eventTimestamp * 1000).toLocaleDateString()}`,
+        `Loc:${ticket.location.substring(0, 20)}`,
+        `Price:${ticket.price}`,
+        `Purchase Date:${ticket.purchaseDate}`,
+        `TxHash:${ticket.txHash}`
+      ].join('\n');
+
+      await QRCode.toCanvas(canvas, qrData, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+
+      return new Promise<void>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ticket-${ticket.id}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 'image/png');
+      });
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
+  };
 
   const handleRefresh = async () => {
     // Implement refresh logic if needed, or remove this function if not used
@@ -488,13 +517,30 @@ export function TicketManagementSystem() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg flex items-center justify-center">
-                    <QrCode className="w-16 h-16 text-purple-400" />
+                  <div className="rounded-lg flex items-center justify-center">
+                    {/* <QrCode className="w-16 h-16 text-purple-400" /> */}
+                    {selectedTicket && (
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                        [
+                          `ID:${selectedTicket.id}`,
+                          `Event:${selectedTicket.eventTitle.substring(0, 30)}`,
+                          `Date:${new Date(selectedTicket.eventTimestamp * 1000).toLocaleDateString()}`,
+                          `Loc:${selectedTicket.location.substring(0, 20)}`,
+                          `Price:${selectedTicket.price}`,
+                          `Purchase Date:${selectedTicket.purchaseDate}`,
+                          `TxHash:${selectedTicket.txHash}`
+                        ].join("\n")
+                      )}`} 
+                      alt="Ticket QR Code"
+                      className="w-auto h-auto p-4"
+                    />
+                  )}
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Ticket ID</span>
-                      <span className="font-mono text-purple-300">#{selectedTicket.qrCode}</span>
+                      <span className="font-mono text-purple-300">#{selectedTicket.id}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Purchase Price</span>
@@ -569,12 +615,28 @@ export function TicketManagementSystem() {
               </DialogHeader>
 
               <div className="space-y-4">
-                <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center mx-auto">
-                  <QrCode className="w-24 h-24 text-slate-800" />
+                <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center mx-auto p-4">
+                  {selectedTicket && (
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                        [
+                          `ID:${selectedTicket.id}`,
+                          `Event:${selectedTicket.eventTitle.substring(0, 30)}`,
+                          `Date:${new Date(selectedTicket.eventTimestamp * 1000).toLocaleDateString()}`,
+                          `Loc:${selectedTicket.location.substring(0, 20)}`,
+                          `Price:${selectedTicket.price}`,
+                          `Purchase Date:${selectedTicket.purchaseDate}`,
+                          `TxHash:${selectedTicket.txHash}`
+                        ].join("\n")
+                      )}`} 
+                      alt="Ticket QR Code"
+                      className="w-full h-full"
+                    />
+                  )}
                 </div>
                 <div>
                   <p className="font-medium text-white">{selectedTicket.eventTitle}</p>
-                  <p className="text-sm text-slate-400">Ticket #{selectedTicket.qrCode}</p>
+                  <p className="text-sm text-slate-400">Ticket #{selectedTicket.id}</p>
                 </div>
                 <p className="text-xs text-slate-400">Show this QR code at the event entrance for verification</p>
               </div>
@@ -583,9 +645,10 @@ export function TicketManagementSystem() {
                 <Button
                   variant="outline"
                   className="flex-1 border-slate-600 text-slate-300 hover:border-purple-500 bg-transparent"
+                  onClick={() => selectedTicket && downloadQRCode(selectedTicket)}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Download
+                  Download QR Code
                 </Button>
                 <Button className="flex-1 bg-purple-600 hover:bg-purple-700" onClick={() => setCurrentAction(null)}>
                   Done
