@@ -45,7 +45,7 @@ export default function Dashboard() {
     },
     {
       label: "Total Spent",
-      value: `${userStats.totalSpent} STT`,
+      value: `${userStats.totalSpent} KAIA`,
       change: userStats.attendedEvents > 0 ? "Based on ticket ownership" : "No purchases yet",
       icon: DollarSign,
       color: "from-green-500 to-emerald-500"
@@ -60,7 +60,7 @@ export default function Dashboard() {
     },
     {
       label: "Revenue Earned",
-      value: `${userStats.totalRevenue} STT`,
+      value: `${userStats.totalRevenue} KAIA`,
       change: userStats.createdEvents > 0 ? 
         `From ${userStats.createdEvents} events` : "No revenue yet",
       icon: Users,
@@ -96,7 +96,7 @@ export default function Dashboard() {
         id: Number(ticket.id),
         action: ticket.canceled ? `Canceled ${ticket.eventName}` : `Created ${ticket.eventName}`,
         time: new Date(Number(ticket.eventTimestamp) * 1000).toLocaleDateString(),
-        amount: `${formatEther(ticket.price)} STT`,
+        amount: `${formatEther(ticket.price)} KAIA`,
         type: ticket.canceled ? "cancel" : "create",
         status: ticket.closed ? "Closed" : ticket.canceled ? "Canceled" : ticket.passed ? "Passed": ticket.sold >= ticket.maxSupply ? "Sold Out" : "Active",
         sold: Number(ticket.sold),
@@ -197,7 +197,7 @@ export default function Dashboard() {
                 <Card className="bg-gradient-to-br from-slate-800/80 to-orange-900/30 border-orange-500/30">
                   <CardContent className="p-4 text-center">
                     <p className="text-2xl font-bold text-white">{platformStats.totalPlatformRevenue}</p>
-                    <p className="text-slate-300 text-sm">Platform Revenue (STT)</p>
+                    <p className="text-slate-300 text-sm">Platform Revenue (KAIA)</p>
                   </CardContent>
                 </Card>
               </div>
@@ -274,7 +274,9 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.length > 0 ? (
-                    recentActivity.map((activity, index) => (
+                    recentActivity
+                    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                    .map((activity, index) => (
                       <div
                         key={activity.id}
                         className="flex items-center justify-between p-6 bg-slate-700/30 rounded-xl border border-slate-600/30"

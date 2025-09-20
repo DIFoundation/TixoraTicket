@@ -173,7 +173,7 @@ export default function CreateEvent() {
                         id="title"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="Web3 Innovation Summit 2024"
+                        placeholder={`Web3 Innovation Summit ${new Date().getFullYear()}`}
                         required
                         className="bg-slate-800/80 border-purple-500/30 text-white focus:border-purple-400 focus:ring-purple-400/20 h-12 text-lg"
                       />
@@ -305,12 +305,12 @@ export default function CreateEvent() {
                           min="0.01"
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                          placeholder="25.00"
+                          placeholder="25.00 (minimum 0.01)"
                           required
                           className="bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-lg pr-16"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-400 font-medium">
-                          STT
+                          KAIA
                         </span>
                       </div>
                     </div>
@@ -326,7 +326,7 @@ export default function CreateEvent() {
                         min="1"
                         value={formData.totalSupply}
                         onChange={(e) => setFormData({ ...formData, totalSupply: e.target.value })}
-                        placeholder="1000"
+                        placeholder="1000 (minimum 1)"
                         required
                         className="bg-slate-800/80 border-green-500/30 text-white focus:border-green-400 focus:ring-green-400/20 h-12 text-lg"
                       />
@@ -347,15 +347,15 @@ export default function CreateEvent() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center p-3 bg-slate-700/30 rounded-lg">
                         <span className="text-slate-300">Gross Revenue:</span>
-                        <span className="text-white font-mono text-lg">{totalRevenue} STT</span>
+                        <span className="text-white font-mono text-lg">{totalRevenue} KAIA</span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-slate-700/30 rounded-lg">
                         <span className="text-slate-300">Platform Fee (2.5%):</span>
-                        <span className="text-red-400 font-mono">-{platformFee} STT</span>
+                        <span className="text-red-400 font-mono">-{platformFee} KAIA</span>
                       </div>
                       <div className="flex justify-between items-center p-4 bg-gradient-to-r from-yellow-900/30 to-green-900/30 rounded-lg border border-yellow-500/30">
                         <span className="text-yellow-200 font-medium">Your Earnings:</span>
-                        <span className="text-yellow-400 font-bold font-mono text-xl">{yourEarnings} STT</span>
+                        <span className="text-yellow-400 font-bold font-mono text-xl">{yourEarnings} KAIA</span>
                       </div>
                     </div>
                   </CardContent>

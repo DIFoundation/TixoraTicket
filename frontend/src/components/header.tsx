@@ -34,7 +34,7 @@ function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="https://github.com/DeborahOlaboye/TixoraTicket/blob/main/README.md" target='_blank' className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
+            <Link href="https://github.com/DIFoundation/TixoraTicket/blob/main/README.md" target='_blank' className="text-slate-300 hover:text-purple-400 transition-colors font-medium">
               Docs
             </Link>
             <Link href="/resources" className="text-slate-300 hover:text-purple-400 transition-colors font-medium">

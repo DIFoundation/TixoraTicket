@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Calendar, MapPin, Users, Ticket, Star, Shield, Zap, Globe, RefreshCw, ChevronDown, Play, Pause, Loader2 } from "lucide-react"
+import { ArrowRight, Calendar, MapPin, Users, Ticket, Star, Shield, Zap, Globe, RefreshCw, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
 import Image from "next/image"
@@ -309,7 +309,7 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
-              <Link href="https://github.com/DeborahOlaboye/TixoraTicket/blob/main/README.md" target="_blank" className="hover:text-primary transition-colors hover:underline">
+              <Link href="https://github.com/DIFoundation/TixoraTicket/blob/main/README.md" target="_blank" className="hover:text-primary transition-colors hover:underline">
                 Documentation
               </Link>
               <Link href="/resources" className="hover:text-primary transition-colors hover:underline">
