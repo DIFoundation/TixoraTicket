@@ -665,7 +665,7 @@ export function TicketManagementSystem() {
           {selectedTicket && (
             <div className="space-y-6">
               <DialogHeader>
-                <DialogTitle className="text-white">Transfer Ticket</DialogTitle>
+                <DialogTitle className="text-white">Transfer Ticket <i>(coming soon)</i></DialogTitle>
                 <DialogDescription className="text-slate-400">
                   Transfer your ticket to another wallet address. This action cannot be undone.
                 </DialogDescription>
