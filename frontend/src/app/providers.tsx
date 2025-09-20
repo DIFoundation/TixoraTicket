@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { kairos } from "wagmi/chains";
 import "@rainbow-me/rainbowkit/styles.css";
-import { http } from "viem"
+import { http } from "viem";
+import { Toaster } from "sonner";
 
 const config = getDefaultConfig({
     appName: 'Tixora Ticket',
@@ -34,6 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           // showRecentTransactions={true}
         >
           {children}
+          <Toaster position="top-right" richColors />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

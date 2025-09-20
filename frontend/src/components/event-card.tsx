@@ -9,7 +9,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { useEventRegistration } from "@/hooks/use-event-registration"
 import { useAccount } from "wagmi"
-import { toast } from "react-toastify"
+import { toast } from "sonner"
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 interface MarketplaceEvent {

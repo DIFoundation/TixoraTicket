@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "react-toastify"
 import { Upload, Calendar, MapPin, Users, DollarSign, Sparkles, ArrowLeft, Clock, Image, FileText, Coins } from "lucide-react"
 import { eventTicketingAddress, eventTicketingAbi } from "@/lib/abiAndAddress"
-import Link from "next/link"
+import { toast } from "sonner"
 
 export default function CreateEvent() {
   const { address, isConnected } = useAccount()

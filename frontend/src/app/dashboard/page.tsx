@@ -45,7 +45,7 @@ export default function Dashboard() {
     },
     {
       label: "Total Spent",
-      value: `${userStats.totalSpent} KAIA`,
+      value: `${Number(userStats.totalSpent).toFixed(2)} KAIA`,
       change: userStats.attendedEvents > 0 ? "Based on ticket ownership" : "No purchases yet",
       icon: DollarSign,
       color: "from-green-500 to-emerald-500"
@@ -222,6 +222,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-3xl font-bold text-white mb-2">
+                          {/* {Number(stat.value).toFixed(2)} */}
                           {stat.value}
                         </p>
                         <p className="text-slate-300 font-medium mb-1">{stat.label}</p>
