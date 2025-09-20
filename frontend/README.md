@@ -1,6 +1,6 @@
 # Tixora Frontend
 
-This is the frontend application for Tixora, a decentralized event ticketing platform built with Next.js 15 and deployed on Somnia blockchain.
+This is the frontend application for Tixora, a decentralized event ticketing platform built with Next.js 15 and deployed on Kaia network.
 
 ## Tech Stack
 
@@ -63,7 +63,7 @@ Comprehensive ticket portfolio management:
 
 Multi-wallet connection with RainbowKit integration:
 - Support for MetaMask, WalletConnect, Coinbase Wallet
-- Network switching to Somnia testnet
+- Network switching to kaia kairos testnet
 - Balance display and account management
 - Custom styling with Tailwind CSS
 
@@ -72,5 +72,5 @@ Multi-wallet connection with RainbowKit integration:
 1. Fork the repository
 2. Create feature branch
 3. Make changes with proper TypeScript types
-4. Test thoroughly on Somnia testnet
+4. Test thoroughly on kaia kairos testnet
 5. Submit pull request
