@@ -10,10 +10,9 @@ import Image from "next/image"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "react-toastify"
+import { toast } from "sonner"
 import { useEventRegistration } from "@/hooks/use-event-registration"
 import { kairos } from 'viem/chains'
-import { Bitter } from "next/font/google"
 
 interface EventData {
   id: number

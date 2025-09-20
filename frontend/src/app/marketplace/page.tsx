@@ -10,7 +10,7 @@ import { EventCard } from "@/components/event-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
-import { toast } from "react-toastify"
+import { toast } from "sonner"
 import { useMarketplaceEvents, MarketplaceEvent } from "@/hooks/use-marketplace-events"
 
 

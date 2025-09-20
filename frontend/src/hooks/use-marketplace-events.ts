@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useReadContract } from 'wagmi'
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { formatEther } from "viem"
+import { toast } from "sonner"
 
 interface TicketData {
   id: number
@@ -42,15 +43,43 @@ export function useMarketplaceEvents() {
   const [loading, setLoading] = useState(true)
   
   // Read contract data
-  const { data: recentTickets, error: ticketsError } = useReadContract({
+  const { data: recentTickets, error: ticketsError, isPending } = useReadContract({
     address: eventTicketingAddress,
     abi: eventTicketingAbi,
     functionName: 'getRecentTickets',
   })
 
+  // Show loading state
+  useEffect(() => {
+    let toastId: string | number | undefined;
+    
+    if (isPending) {
+      toastId = toast.loading('Loading events...');
+    }
+    
+    return () => {
+      if (toastId !== undefined) {
+        toast.dismiss(toastId);
+      }
+    };
+  }, [isPending])
+
+  // Handle errors
+  useEffect(() => {
+    if (ticketsError) {
+      toast.error(`Failed to load events: ${ticketsError.message}`)
+      console.error('Error loading events:', ticketsError)
+    }
+  }, [ticketsError])
+
   // Transform blockchain data to marketplace format
   useEffect(() => {
     if (recentTickets && Array.isArray(recentTickets)) {
+      if (recentTickets.length === 0) {
+        toast.info('No events found. Create one to get started!')
+      } else {
+        toast.success('Events loaded successfully')
+      }
       const transformedEvents: MarketplaceEvent[] = recentTickets.map((ticket: TicketData) => {
         const eventDate = new Date(Number(ticket.eventTimestamp) * 1000)
         const now = new Date()

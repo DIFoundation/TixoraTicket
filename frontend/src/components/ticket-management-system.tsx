@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, use } from "react"
 import { Calendar, QrCode, Send, ExternalLink, Copy, Search, MoreVertical, Download, Eye, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -199,19 +200,34 @@ export function TicketManagementSystem() {
   }
 
   const handleTransfer = async () => {
-    if (!selectedTicket || !transferAddress || !address) return
+    if (!selectedTicket || !transferAddress || !address) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
     try {
-      await transferTicket(address, transferAddress as `0x${string}`, BigInt(selectedTicket.tokenId))
-      setCurrentAction(null)
-      setTransferAddress("")
+      const toastId = toast.loading('Initiating ticket transfer...');
+      
+      await transferTicket(address, transferAddress as `0x${string}`, BigInt(selectedTicket.tokenId));
+      
+      toast.success('Ticket transferred successfully!', {
+        id: toastId,
+        description: `Ticket #${selectedTicket.id} has been transferred.`,
+      });
+      
+      setCurrentAction(null);
+      setTransferAddress("");
     } catch (error) {
-      console.error('Transfer failed:', error)
+      console.error('Transfer failed:', error);
+      toast.error('Transfer failed', {
+        description: error instanceof Error ? error.message : 'An error occurred during transfer',
+      });
     }
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard!')
   }
 
   const getStatusColor = (status: string) => {
@@ -249,7 +265,10 @@ export function TicketManagementSystem() {
 
       return new Promise<void>((resolve) => {
         canvas.toBlob((blob) => {
-          if (!blob) return;
+          if (!blob) {
+            toast.error('Failed to generate QR code');
+            return;
+          };
           
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -259,11 +278,13 @@ export function TicketManagementSystem() {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
+          toast.success('QR code downloaded successfully!');
           resolve();
         }, 'image/png');
       });
     } catch (error) {
       console.error('Error generating QR code:', error);
+      toast.error('Failed to generate QR code');
     }
   };
 
