@@ -1,6 +1,6 @@
 # Tixora Smart Contracts
 
-This directory contains the smart contracts for the Tixora decentralized event ticketing platform, built on Solidity 0.8.28 and deployed on Somnia testnet.
+This directory contains the smart contracts for the Tixora decentralized event ticketing platform, built on Solidity 0.8.28 and deployed on kaia kairos testnet.
 
 ## Contract Overview
 
@@ -38,14 +38,14 @@ Shared library containing utility functions:
 ## Deployed Addresses
 
 **Somnia Testnet:**
-- **EventTicketing**: `0x594465a37a938Eb33C9F99F5c3F69915Bf5142bA`
+- **EventTicketing**: `0x6815e76CE475451D42363f4b55533720f19Ebada`
 - **TicketNft**: `0xF708183DA2f773c213F93A3220eC5922fd73C720`
-- **TicketResaleMarket**: `0x1573Cbbe7fcdeFe94Bbda4854Cac622C02b983EF`
+- **TicketResaleMarket**: `0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8`
 
 **Block Explorer:**
-- [EventTicketing Contract](https://shannon-explorer.somnia.network/address/0x594465a37a938Eb33C9F99F5c3F69915Bf5142bA#code)
-- [TicketNft Contract](https://shannon-explorer.somnia.network/address/0xF708183DA2f773c213F93A3220eC5922fd73C720#code)
-- [TicketResaleMarket Contract](https://shannon-explorer.somnia.network/address/0x1573Cbbe7fcdeFe94Bbda4854Cac622C02b983EF#code)
+- [EventTicketing Contract](https://kairos.kaiascan.io//address/0x6815e76CE475451D42363f4b55533720f19Ebada#code)
+- [TicketNft Contract](https://kairos.kaiascan.io/address/0xF708183DA2f773c213F93A3220eC5922fd73C720#code)
+- [TicketResaleMarket Contract](https://kairos.kaiascan.io/address/0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8#code)
 
 ## Security Features
 
