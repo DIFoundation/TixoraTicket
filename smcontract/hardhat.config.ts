@@ -18,25 +18,25 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    somnia_testnet: {
-      url: "https://dream-rpc.somnia.network",
+    kairos: {
+      url: "https://public-en-kairos.node.kaia.io",
       accounts: [PRIVATE_KEY],
     },
   },
   etherscan: {
     apiKey: {
-      somnia_testnet: API_KEY,
+      kairos: API_KEY,
     },
     customChains: [
       {
-        network: "somnia_testnet",
-        chainId: 50312,
+        network: "kairos",
+        chainId: 1001,
         urls: {
-          apiURL: "https://shannon-explorer.somnia.network/api",
-          browserURL: "https://shannon-explorer.somnia.network",
+          apiURL: "https://kairos-api.kaiascan.io/hardhat-verify",
+          browserURL: "https://kairos.kaiascan.io",
         }
-      }
-    ],
+      },
+    ]
   },
   sourcify: {
     enabled: false,
@@ -44,3 +44,6 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+
+
+// https://kairos.kaiascan.io/

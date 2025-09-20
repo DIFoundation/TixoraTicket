@@ -6,6 +6,14 @@
 // ]
 
 
-// // h verify --network celo_sepolia --constructor-args scripts/arguments.ts 0x79eB79fe87091456C3abaEE49a8F52d7B4dCc3a6
 
-// npx hardhat ignition deploy ignition/modules/EventTicketing.ts --network somnia_testnet --verify
+// npx hardhat ignition deploy ignition/modules/EventTicketing.ts --network kairo --verify
+
+
+// [ EventTicketing ] successfully deployed 🚀
+
+// Deployed Addresses
+
+// EventTicketing#TicketNft - 0x6815e76CE475451D42363f4b55533720f19Ebada
+// EventTicketing#EventTicketing - 0xF708183DA2f773c213F93A3220eC5922fd73C720
+// EventTicketing#TicketResaleMarket - 0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8

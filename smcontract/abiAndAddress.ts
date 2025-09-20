@@ -1,4 +1,4 @@
-export const TicketNft = "0xF708183DA2f773c213F93A3220eC5922fd73C720"
+export const TicketNft = "0x6815e76CE475451D42363f4b55533720f19Ebada"
 export const TicketNftAbi = [
     {
         "inputs": [
@@ -734,7 +734,7 @@ export const TicketNftAbi = [
     }
 ]
 
-export const EventTicketing = "0x594465a37a938Eb33C9F99F5c3F69915Bf5142bA"
+export const EventTicketing = "0xF708183DA2f773c213F93A3220eC5922fd73C720"
 export const EventTicketingAbi = [
     {
         "inputs": [
@@ -1790,7 +1790,7 @@ export const EventTicketingAbi = [
     }
 ]
 
-export const TicketResaleMarket = "0x1573Cbbe7fcdeFe94Bbda4854Cac622C02b983EF"
+export const TicketResaleMarket = "0xaD0299Ef4496d86B1F9CB71dc778F6a660eD4Af8"
 export const TicketResaleMarketAbi = [
     {
         "inputs": [

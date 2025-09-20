@@ -2,7 +2,7 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre from "hardhat";
 
-describe("EventTicketing (native STT)", function () {
+describe("EventTicketing (native KAIA)", function () {
   async function deployFixture() {
     const [owner, creator, user, user2] = await hre.ethers.getSigners();
 
@@ -60,7 +60,7 @@ describe("EventTicketing (native STT)", function () {
     expect(t.totalCollected).to.equal(0n);
   });
 
-  it("registers with exact STT, mints NFT and records registrant", async () => {
+  it("registers with exact KAIA, mints NFT and records registrant", async () => {
     const { sale, nft, creator, user } = await loadFixture(deployFixture);
     const { id, price, maxSupply } = await createBasicTicket(sale, creator, { maxSupply: 2 });
 
@@ -233,7 +233,7 @@ describe("EventTicketing (native STT)", function () {
     // isAvailable true initially
     expect(await sale.isAvailable(id)).to.equal(true);
 
-    // direct STT send reverts
+    // direct KAIA send reverts
     await expect((await hre.ethers.getSigners())[0].sendTransaction({ to: sale.target, value: hre.ethers.parseEther("0.1") }))
       .to.be.revertedWithCustomError(sale, "InvalidCall");
 
