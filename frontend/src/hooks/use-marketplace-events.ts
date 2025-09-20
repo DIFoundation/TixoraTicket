@@ -81,7 +81,7 @@ export function useMarketplaceEvents() {
         return {
           id: Number(ticket.id),
           eventTitle: ticket.eventName,
-          price: `${formatEther(ticket.price)} STT`,
+          price: `${formatEther(ticket.price)} KAIA`,
           date: eventDate.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'short', 

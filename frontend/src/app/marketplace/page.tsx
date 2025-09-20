@@ -23,7 +23,7 @@ export default function Marketplace() {
   const { events, loading } = useMarketplaceEvents()
   
   // Check if user is on the correct network
-  const isCorrectNetwork = chainId // Somnia testnet
+  const isCorrectNetwork = chainId 
 
   // Read contract data
   const { data: totalTickets, error: totalTicketsError } = useReadContract({
@@ -131,7 +131,7 @@ export default function Marketplace() {
                     <AlertCircle className="h-5 w-5 text-orange-400 flex-shrink-0" />
                     <div>
                       <p className="text-orange-200 font-medium">Wrong Network</p>
-                      <p className="text-orange-300 text-sm">Please switch to Somnia testnet to interact with events.</p>
+                      <p className="text-orange-300 text-sm">Please switch to Kaia Kairos testnet to interact with events.</p>
                     </div>
                   </div>
                 </CardContent>

@@ -97,7 +97,7 @@ export function EventCard({ event }: EventCardProps) {
       const userBalance = BigInt(balance)
       
       if (userBalance < requiredAmount) {
-        toast.error(`Insufficient balance. You need ${event.price} STT to purchase this ticket.`)
+        toast.error(`Insufficient balance. You need ${event.price} KAIA to purchase this ticket.`)
         setPurchasing(false)
         return
       }
@@ -196,7 +196,7 @@ export function EventCard({ event }: EventCardProps) {
   }, [receiptError])
 
   // Check if user is on the correct network (only relevant when connected)
-  const isCorrectNetwork = !isConnected || chainId // Somnia testnet - allow if not connected
+  const isCorrectNetwork = !isConnected || chainId // KAIA testnet - allow if not connected
 
   const isProcessing = purchasing || isPending || isConfirming
 
@@ -210,7 +210,7 @@ export function EventCard({ event }: EventCardProps) {
 
   const handleNetworkSwitch = (e: React.MouseEvent) => {
     e.stopPropagation()
-    toast.error(`⚠️ Please switch to Somnia testnet (Chain ID: ${chainId}) to purchase tickets`)
+    toast.error(`⚠️ Please switch to KAIA testnet (Chain ID: ${chainId}) to purchase tickets`)
   }
 
   const formatEventDate = (dateString: string) => {

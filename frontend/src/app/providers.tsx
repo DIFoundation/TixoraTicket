@@ -3,16 +3,16 @@
 import { RainbowKitProvider, darkTheme, getDefaultConfig, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
-import { somniaTestnet } from "wagmi/chains";
+import { kairos } from "wagmi/chains";
 import "@rainbow-me/rainbowkit/styles.css";
 import { http } from "viem"
 
 const config = getDefaultConfig({
     appName: 'Tixora Ticket',
     projectId: '505bbca624bfefde94e149726255a254',
-    chains: [somniaTestnet],
+    chains: [kairos],
     transports: {
-      [somniaTestnet.id]: http('https://dream-rpc.somnia.network', {
+      [kairos.id]: http('https://public-en-kairos.node.kaia.io', {
         timeout: 60000,
         retryDelay: 2
       })

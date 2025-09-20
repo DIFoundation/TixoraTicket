@@ -90,7 +90,7 @@ export function TicketManagementSystem() {
           location: ticket.location,
           status: isPast ? "past" as const : "upcoming" as const,
           qrCode: ticket.id.toString(),
-          price: formatEther(ticket.price) + " STT",
+          price: formatEther(ticket.price) + " KAIA",
           purchaseDate: new Date(Number(ticket.eventTimestamp) * 1000).toISOString(),
           txHash: ticketTransactions[ticket.id.toString()] || null,
         } satisfies NFTTicketDisplay
@@ -413,7 +413,7 @@ export function TicketManagementSystem() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => ticket.txHash && window.open(`https://shannon-explorer.somnia.network/tx/${ticket.txHash}`, "_blank")}
+                          onClick={() => ticket.txHash && window.open(`https://kairos.kaiascan.io/tx/${ticket.txHash}`, "_blank")}
                           disabled={!ticket.txHash}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
@@ -536,7 +536,7 @@ export function TicketManagementSystem() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => selectedTicket.txHash && window.open(`https://shannon-explorer.somnia.network/tx/${selectedTicket.txHash}`, "_blank")}
+                  onClick={() => selectedTicket.txHash && window.open(`https://kairos.kaiascan.io/tx/${selectedTicket.txHash}`, "_blank")}
                   disabled={!selectedTicket.txHash}
                   className="border-slate-600 text-slate-300 hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

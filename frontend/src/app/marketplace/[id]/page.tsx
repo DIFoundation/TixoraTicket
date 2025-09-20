@@ -5,13 +5,15 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { eventTicketingAbi, eventTicketingAddress } from "@/lib/abiAndAddress"
 import { Abi, formatEther, parseEther } from "viem"
 import { Button } from "@/components/ui/button"
-import { Calendar, MapPin, Users, Ticket, Loader2, ArrowLeft, Shield, Clock, Copy, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react"
+import { Calendar, MapPin, Users, Ticket, Loader2, ArrowLeft, Shield, Clock, Copy, CheckCircle, AlertTriangle, ExternalLink, X } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "react-toastify"
 import { useEventRegistration } from "@/hooks/use-event-registration"
+import { kairos } from 'viem/chains'
+import { Bitter } from "next/font/google"
 
 interface EventData {
   id: number
@@ -257,8 +259,8 @@ export default function EventDetailPage() {
     }
 
     // Check network
-    if (chainId !== 50312) {
-      toast.error("⚠️ Please switch to Somnia testnet")
+    if (chainId !== kairos.id) {
+      toast.error("⚠️ Please switch to Kaia Kairos testnet")
       return
     }
 
@@ -270,7 +272,7 @@ export default function EventDetailPage() {
       // Convert price from ETH to Wei for the contract call
       const priceInWei = parseEther(events.price)
       
-      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} STT`)
+      toast.info(`💰 Purchasing ticket for "${events.eventName}" - Please confirm the transaction in your wallet. Ticket price: ${events.price} KAIA`)
       
       writeContract({
         address: eventTicketingAddress as `0x${string}`,
@@ -341,7 +343,7 @@ export default function EventDetailPage() {
   }, [writeError]);
 
   const isProcessing = purchasing || isPending || isConfirming
-  const isCorrectNetwork = chainId === 50312
+  const isCorrectNetwork = chainId === kairos.id
 
   if (isLoading) {
     return (
@@ -502,7 +504,7 @@ export default function EventDetailPage() {
                     <div>
                       <p className="text-slate-300 text-sm">Price per ticket</p>
                       <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        {events?.price} STT
+                        {events?.price} KAIA
                       </p>
                     </div>
                     <div className="text-right">
@@ -525,16 +527,20 @@ export default function EventDetailPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-red-400 text-sm flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        Please switch to Somnia testnet
+                        Please switch to Kaia Kairos testnet
                       </p>
                     </div>
                   )}
 
                   <div className="pt-4 border-t border-slate-700">
+                    <div className="mb-3 flex items-center gap-2">
                     <Button 
                       onClick={handleBuyTicket}
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
-                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || events?.status === 'registered' || isProcessing || checkingRegistration}
+                      className={`
+                        w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-base transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25
+                        
+                      `}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || isProcessing || checkingRegistration || events?.status === 'registered' || isRegistered === true}
                     >
                       {checkingRegistration ? (
                         <>
@@ -554,7 +560,7 @@ export default function EventDetailPage() {
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Already Registered
                           </>
-                        ) :
+                        ) : 
                         events?.status === 'canceled' ? 'Event Canceled' : 
                         events?.status === 'closed' ? 'Sales Ended' :
                         events?.status === 'sold_out' ? 'Sold Out' : 
@@ -567,6 +573,23 @@ export default function EventDetailPage() {
                         ) : 'Event Canceled'
                       )}
                     </Button>
+
+                    {/* cancel ticket button
+                    <Button
+                      variant="destructive"
+                      className={`
+                        w-full h-12 text-base 
+                        ${(events?.status === 'canceled' || events?.status === 'closed')? 'block' : 'hidden'} 
+                      `}
+                      disabled={!isCorrectNetwork || events?.status === 'canceled' || events?.status === 'closed' || (events?.ticketsLeft ?? 0) <= 0 || events?.status === 'passed' || isProcessing || checkingRegistration || events?.status === 'registered' || isRegistered === false}
+                      onClick={() => router.push(`/tickets/cancel/${events?.id}`)}
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel Ticket
+                    </Button> */}
+
+                    </div>
+
                     
                     {events?.ticketsLeft !== undefined && events.ticketsLeft < 10 && events.ticketsLeft > 0 && events.status === 'active' && (
                       <div className="mt-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
